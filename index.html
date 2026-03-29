@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>百度AI智能抠图 | 人像分割 · 发丝级抠图</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            font-family: 'Inter', sans-serif;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-card {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* 头部 - 百度AI品牌区域 */
+        .header {
+            background: linear-gradient(135deg, #1a3363 0%, #0d213f 100%);
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .baidu-badge {
+            background: #2d6a4f;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .ai-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            color: #a3e4ff;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .student-info {
+            background: rgba(255,255,255,0.12);
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            font-family: monospace;
+            font-weight: 500;
+            color: #e0f2fe;
+            font-size: 0.9rem;
+        }
+
+        /* 工作区 */
+        .work-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .upload-box, .result-box {
+            flex: 1;
+            min-width: 280px;
+            background: #ffffff;
+            border-radius: 1.2rem;
+            padding: 1.5rem;
+            border: 1px solid #eef2f8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .section-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #2d6a4f;
+            padding-left: 14px;
+            color: #1a3363;
+        }
+
+        .preview-container {
+            background: #fafcff;
+            border-radius: 1rem;
+            border: 2px dashed #cbdde9;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 320px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .placeholder-icon {
+            text-align: center;
+            color: #8aaec0;
+            padding: 2rem;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            padding: 0.7rem 1.2rem;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #1a3363;
+            color: white;
+            box-shadow: 0 2px 6px rgba(26,51,99,0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0d213f;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .download-btn {
+            width: 100%;
+            background: #2d6a4f;
+            justify-content: center;
+            gap: 8px;
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+            color: white;
+        }
+
+        .download-btn:hover:not(:disabled) {
+            background: #1b4d3e;
+        }
+
+        .status-message {
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            padding: 0.7rem;
+            background: #f0f9ff;
+            border-radius: 1rem;
+            color: #1e4a6e;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #1a3363;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .api-note {
+            margin-top: 16px;
+            background: #eef2fa;
+            border-radius: 0.8rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.7rem;
+            color: #2c5a74;
+            text-align: center;
+        }
+
+        @media (max-width: 780px) {
+            body { padding: 1rem; }
+            .work-area { padding: 1rem; }
+            .header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <div class="header">
+        <div class="title-section">
+            <div class="baidu-badge">百度AI开放平台</div>
+            <div class="ai-badge">🤖 人像分割 · 发丝级抠图</div>
+            <h1>智能抠图大师</h1>
+        </div>
+        <div class="student-info">
+            🧑‍🎓 学号：<strong>42324028</strong> &nbsp;|&nbsp; 姓名：<strong>刘聿康</strong>
+        </div>
+    </div>
+
+    <div class="work-area">
+        <!-- 左侧上传区 -->
+        <div class="upload-box">
+            <div class="section-title">
+                📤 上传图片
+                <span style="font-size: 0.7rem; background: #eef2fa; padding: 2px 8px; border-radius: 30px;">JPG / PNG</span>
+            </div>
+            <div class="preview-container" id="originalPreviewArea">
+                <div class="placeholder-icon" id="originalPlaceholder">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="#8AAEC0"/>
+                        <path d="M14 14L10 9L5 16H19L14 14Z" fill="#8AAEC0"/>
+                    </svg>
+                    <p style="margin-top: 8px;">点击下方按钮上传</p>
+                </div>
+                <img id="originalImage" class="preview-img" style="display: none;" alt="原始图片">
+            </div>
+            <div class="btn-group">
+                <label for="fileInput" class="btn btn-primary" style="cursor: pointer;">📁 选择图片</label>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                <button id="clearBtn" class="btn btn-secondary">🗑️ 清除</button>
+            </div>
+            <div class="api-note">
+                ⚡ 百度AI人像分割接口 | 支持发丝级精细抠图 | 每天5万次免费调用
+            </div>
+        </div>
+
+        <!-- 右侧结果区 -->
+        <div class="result-box">
+            <div class="section-title">
+                ✨ 抠图结果 (透明背景PNG)
+            </div>
+            <div class="preview-container" id="resultContainer">
+                <div class="placeholder-icon" id="resultPlaceholder">
+                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 6H3V18H21V6ZM19 16H5V8H19V16Z" fill="#9BB7D0"/>
+                        <circle cx="8.5" cy="10.5" r="1.5" fill="#9BB7D0"/>
+                        <path d="M15 11L12 15L10 13L7 17H17L15 11Z" fill="#9BB7D0"/>
+                    </svg>
+                    <p>等待处理</p>
+                </div>
+                <img id="resultImage" class="preview-img" style="display: none;" alt="抠图结果">
+            </div>
+            <button id="downloadBtn" class="btn download-btn" disabled>
+                ⬇️ 下载透明背景 PNG
+            </button>
+            <div id="statusMsg" class="status-message">
+                💡 提示：上传图片后将调用百度AI自动移除背景
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================== 🔥 请在这里填入您的百度API Key ========================
+    const API_KEY = '9hLXgzHHuuUHHXhH84YaewOiE';           // 替换成你的 API Key
+    const SECRET_KEY = '8fRbLGtPmfdviTZXFjcg7gbnZLTayTf6';     // 替换成你的 Secret Key
+    // ============================================================================
+
+    // DOM 元素
+    const fileInput = document.getElementById('fileInput');
+    const originalImage = document.getElementById('originalImage');
+    const originalPlaceholder = document.getElementById('originalPlaceholder');
+    const resultImage = document.getElementById('resultImage');
+    const resultPlaceholder = document.getElementById('resultPlaceholder');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusDiv = document.getElementById('statusMsg');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let currentResultBlob = null;
+    let isProcessing = false;
+    let accessToken = null;
+
+    // 获取百度 Access Token (有效期30天)
+    async function getAccessToken() {
+        if (accessToken) return accessToken;
+
+        const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${API_KEY}&client_secret=${SECRET_KEY}`;
+        
+        try {
+            const response = await fetch(url, { method: 'POST' });
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(`${data.error}: ${data.error_description}`);
+            }
+            
+            accessToken = data.access_token;
+            return accessToken;
+        } catch (error) {
+            console.error('获取Access Token失败:', error);
+            throw new Error('获取百度API凭证失败，请检查API Key和Secret Key是否正确');
+        }
+    }
+
+    // 显示状态
+    function setStatus(message, isLoading = false) {
+        if (isLoading) {
+            statusDiv.innerHTML = `<span class="loading-spinner"></span> ${message}`;
+        } else {
+            statusDiv.innerHTML = message;
+        }
+    }
+
+    // 重置界面
+    function resetUI() {
+        originalImage.style.display = 'none';
+        originalPlaceholder.style.display = 'flex';
+        resultImage.style.display = 'none';
+        resultPlaceholder.style.display = 'flex';
+        downloadBtn.disabled = true;
+        currentResultBlob = null;
+        if (fileInput) fileInput.value = '';
+        setStatus('已清空，可以上传新图片进行百度AI智能抠图。');
+    }
+
+    // 压缩图片 (如果超过4MB限制)
+    function compressImage(file, maxSizeMB = 3.5) {
+        return new Promise((resolve, reject) => {
+            if (file.size <= maxSizeMB * 1024 * 1024) {
+                resolve(file);
+                return;
+            }
+
+            const img = new Image();
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // 如果图片太大，等比缩小
+                    const maxDimension = 1500;
+                    if (width > maxDimension || height > maxDimension) {
+                        if (width > height) {
+                            height = (height / width) * maxDimension;
+                            width = maxDimension;
+                        } else {
+                            width = (width / height) * maxDimension;
+                            height = maxDimension;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', 0.85);
+                };
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 调用百度人像分割API
+    async function baiduMatting(imageFile) {
+        // 获取access_token
+        const token = await getAccessToken();
+        
+        // 将图片转为Base64 (不包含头部)
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(imageFile);
+        });
+        
+        // 构建请求URL (人像分割接口)
+        const apiUrl = `https://aip.baidubce.com/rest/2.0/image-classify/v1/body_seg?access_token=${token}`;
+        
+        // 设置参数: type=foreground 只返回透明背景的前景抠图，减少带宽
+        const params = new URLSearchParams();
+        params.append('image', base64Data);
+        params.append('type', 'foreground');  // 只返回透明背景前景图
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params
+        });
+        
+        const result = await response.json();
+        
+        if (result.error_code) {
+            throw new Error(`百度API错误 [${result.error_code}]: ${result.error_msg}`);
+        }
+        
+        // 返回foreground字段 (Base64编码的透明背景PNG)
+        if (!result.foreground) {
+            throw new Error('未返回抠图结果，请确认图片中是否有人物');
+        }
+        
+        // 将Base64转换为Blob
+        const base64Foreground = result.foreground;
+        const byteCharacters = atob(base64Foreground);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: 'image/png' });
+    }
+
+    // 处理上传和抠图
+    async function handleImageUpload(file) {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            setStatus('❌ 请上传图片文件 (JPG/PNG)');
+            return;
+        }
+
+        // 预览原图
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            originalImage.src = e.target.result;
+            originalImage.style.display = 'block';
+            originalPlaceholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+
+        // 重置结果区域
+        resultImage.style.display = 'none';
+        resultPlaceholder.style.display = 'flex';
+        downloadBtn.disabled = true;
+        currentResultBlob = null;
+
+        // 验证API密钥
+        if (!API_KEY || API_KEY === '9hLXgzHHuuUHHXhH84YaewOi' || !SECRET_KEY || SECRET_KEY === '8fRbLGtPmfdviTZXFjcg7gbnZLTayTf6') {
+            setStatus('🔑 请先在代码中配置百度AI的 API Key 和 Secret Key（免费获取）');
+            return;
+        }
+
+        setStatus('🤖 百度AI正在分析图片，发丝级抠图中...', true);
+        isProcessing = true;
+
+        try {
+            // 压缩图片 (百度要求base64后不超过4M)
+            const compressedFile = await compressImage(file);
+            
+            // 调用百度API抠图
+            const resultBlob = await baiduMatting(compressedFile);
+            
+            // 显示结果
+            const imageUrl = URL.createObjectURL(resultBlob);
+            resultImage.src = imageUrl;
+            resultImage.onload = () => {
+                URL.revokeObjectURL(imageUrl);
+            };
+            resultImage.style.display = 'block';
+            resultPlaceholder.style.display = 'none';
+            currentResultBlob = resultBlob;
+            downloadBtn.disabled = false;
+            setStatus('✅ 抠图成功！点击下载即可获得透明背景PNG图片。');
+        } catch (err) {
+            console.error('抠图失败:', err);
+            let errorMsg = err.message;
+            if (err.message.includes('access_token')) {
+                errorMsg = 'API密钥验证失败，请检查API Key和Secret Key是否正确';
+            } else if (err.message.includes('image')) {
+                errorMsg = '图片格式或大小不符合要求，请尝试其他图片（建议不超过4MB）';
+            }
+            setStatus(`❌ 抠图失败：${errorMsg}`);
+            resultPlaceholder.style.display = 'flex';
+            resultImage.style.display = 'none';
+        } finally {
+            isProcessing = false;
+        }
+    }
+
+    // 下载结果
+    function downloadResult() {
+        if (!currentResultBlob) {
+            setStatus('没有可下载的结果，请先上传并完成抠图。');
+            return;
+        }
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(currentResultBlob);
+        link.href = url;
+        link.download = `baidu_matting_42324028_${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setStatus('📥 下载已开始！透明背景图片已保存。');
+    }
+
+    // 事件绑定
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleImageUpload(e.target.files[0]);
+        }
+    });
+
+    clearBtn.addEventListener('click', resetUI);
+    downloadBtn.addEventListener('click', downloadResult);
+
+    // 初始化检查
+    if (!API_KEY || API_KEY === '9hLXgzHHuuUHHXhH84YaewOi' || !SECRET_KEY || SECRET_KEY === '8fRbLGtPmfdviTZXFjcg7gbnZLTayTf6') {
+        setStatus('🔧 请先获取百度AI的 API Key 和 Secret Key，并在代码中替换配置。');
+    } else {
+        setStatus('✨ 百度AI人像分割已就绪，上传图片即可体验发丝级智能抠图！');
+    }
+</script>
+</body>
+</html>
